@@ -1,6 +1,6 @@
 ---
 title: "US tilapia imports"
-output: html document
+output: html_document
 date: "2024-08-16"
 editor_options: 
   chunk_output_type: console
@@ -13,10 +13,11 @@ library(janitor)
 library(skimr)
 ```
 
-#### Read in and check out the data
+### Read in and check out the data
 
-```{r}
-us_tilapia_imports <- read.csv(here("data", "us_tilapia_imports.csv"))
+```{r, message=FALSE}
+rm(list = ls())
+us_tilapia_imports <- read_csv(here("data", "us_tilapia_imports.csv"))
 ```
 
 ```{r, eval=FALSE}
@@ -25,28 +26,32 @@ dim(us_tilapia_imports)
 summary(us_tilapia_imports)
 ```
 
-#### Pivot longer
+### Pivot longer
 
 ```{r}
 tilapia_long <- us_tilapia_imports %>% pivot_longer(cols = -country, names_to = "year", values_to = "annual_count")
 ```
 
-#### Deal with X's, NAs and class 
+### Deal with X's, NAs and class 
 
 ```{r}
 #remove the X's from the years
 tilapia_long$year<-gsub("X","",as.character(tilapia_long$year))
 tilapia_long$annual_count<-gsub(",","",as.character(tilapia_long$annual_count))
 
+#this also works
+tilapia_long$year <- str_remove_all(tilapia_long$year, "X")
+tilapia_long$annual_count <- str_remove_all(tilapia_long$annual_count, ",")
+
 #mutate from character to numeric
 tilapia_long <- tilapia_long %>% 
   mutate(year = as.numeric(year)) %>% 
   mutate(annual_count = as.numeric(annual_count))
 
-class(tilapia_long$annual_count)
+#class(tilapia_long$annual_count)
 ```
 
-#### Yearly tilapia totals
+### Yearly tilapia totals
 
 ```{r}
 yearly_tilapia_tot <- tilapia_long %>% 
@@ -54,7 +59,7 @@ yearly_tilapia_tot <- tilapia_long %>%
   summarise(total = sum(annual_count, na.rm = TRUE))
 ```
 
-```{r}
+```{r, warning=FALSE}
 ggplot(yearly_tilapia_tot, aes(x = year, y = total)) +
   geom_line(aes(color = total), show.legend = FALSE) +
   # scale_color_hue("green") +
@@ -66,27 +71,28 @@ ggplot(yearly_tilapia_tot, aes(x = year, y = total)) +
   
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 ggsave(here("figs", "yearly_tilapia_tot.png"), bg = "white")
 ```
 
-#### Subset of yearly tilapia totals by country
+### Subset of yearly tilapia totals by country
 
 ```{r}
 tilapia_subset <- tilapia_long %>% 
   filter(country %in% c("Ecuador", "Honduras", "Costa Rica", "Mexico"))
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 ggplot(tilapia_subset, aes(x = year, y = annual_count)) +
   geom_line(aes(color = country)) +
+  scale_color_manual(values = c("green4","magenta4", "dodgerblue3", "gold2")) +
   theme_minimal() +
   labs(title = "Total Tilapia Imports over Time by Country",
        x = "Year",
        y = "Tilapia imports (thousands of lbs")
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 ggsave(here("figs", "tilapia_subset.png"), bg = "white")
 ```
 

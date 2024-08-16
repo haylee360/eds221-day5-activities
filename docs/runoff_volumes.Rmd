@@ -1,6 +1,6 @@
 ---
 title: "Runoff Volume"
-output: html document
+output: html_document
 date: "2024-08-16"
 editor_options: 
   chunk_output_type: console
@@ -18,10 +18,13 @@ source(here("src", "storm_runoff.R"))
 
 #making the impervious sequences
 imperv_vec <- seq(0.6, 0.8, 0.01)
+
 #using the function
 runoff_vec <- predict_runoff(imperv_vec, 182)
-#making the dataframe
+
+#making the data frame
 runoff_df <- data.frame(imperv_vec, runoff_vec)
+
 #graphing
 ggplot(runoff_df, aes(x = imperv_vec, y = runoff_vec)) + 
   geom_point(aes(colour = runoff_vec), show.legend = FALSE) +
@@ -34,7 +37,7 @@ ggplot(runoff_df, aes(x = imperv_vec, y = runoff_vec)) +
   
 ```
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 ggsave(here("figs", "stormwater_runoff.png"), bg = "white")
 ```
 
