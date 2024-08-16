@@ -1,0 +1,40 @@
+---
+title: "Runoff Volume"
+output: html document
+date: "2024-08-16"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(here)
+```
+
+#### Sourcing predict runoff function
+```{r}
+rm(list = ls())
+source(here("src", "storm_runoff.R"))
+
+#making the impervious sequences
+imperv_vec <- seq(0.6, 0.8, 0.01)
+#using the function
+runoff_vec <- predict_runoff(imperv_vec, 182)
+#making the dataframe
+runoff_df <- data.frame(imperv_vec, runoff_vec)
+#graphing
+ggplot(runoff_df, aes(x = imperv_vec, y = runoff_vec)) + 
+  geom_point(aes(colour = runoff_vec), show.legend = FALSE) +
+  scale_color_gradient(low = "darkmagenta", high = "lavender") +
+  geom_line(aes(color = runoff_vec), show.legend = FALSE) +
+  theme_minimal() +
+  labs(x = "Fraction of impervious watershed",
+       y = "Stormwater runoff (cubic feet)",
+       title = "Stormwater runoff vs. fraction impervious watershed")
+  
+```
+
+```{r}
+ggsave(here("figs", "stormwater_runoff.png"), bg = "white")
+```
+

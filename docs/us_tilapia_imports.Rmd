@@ -1,0 +1,92 @@
+---
+title: "US tilapia imports"
+output: html document
+date: "2024-08-16"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(here)
+library(janitor)
+library(skimr)
+```
+
+#### Read in and check out the data
+
+```{r}
+us_tilapia_imports <- read.csv(here("data", "us_tilapia_imports.csv"))
+```
+
+```{r, eval=FALSE}
+skim(us_tilapia_imports)
+dim(us_tilapia_imports)
+summary(us_tilapia_imports)
+```
+
+#### Pivot longer
+
+```{r}
+tilapia_long <- us_tilapia_imports %>% pivot_longer(cols = -country, names_to = "year", values_to = "annual_count")
+```
+
+#### Deal with X's, NAs and class 
+
+```{r}
+#remove the X's from the years
+tilapia_long$year<-gsub("X","",as.character(tilapia_long$year))
+tilapia_long$annual_count<-gsub(",","",as.character(tilapia_long$annual_count))
+
+#mutate from character to numeric
+tilapia_long <- tilapia_long %>% 
+  mutate(year = as.numeric(year)) %>% 
+  mutate(annual_count = as.numeric(annual_count))
+
+class(tilapia_long$annual_count)
+```
+
+#### Yearly tilapia totals
+
+```{r}
+yearly_tilapia_tot <- tilapia_long %>% 
+  group_by(year) %>% 
+  summarise(total = sum(annual_count, na.rm = TRUE))
+```
+
+```{r}
+ggplot(yearly_tilapia_tot, aes(x = year, y = total)) +
+  geom_line(aes(color = total), show.legend = FALSE) +
+  # scale_color_hue("green") +
+  scale_color_gradient(low = "darkblue", high = "lightblue") +
+  theme_minimal() +
+  labs(title = "Total US Tilapia Imports by Year",
+       x = "Year",
+       y = "Tilapia Imports (thousands of lbs)")
+  
+```
+
+```{r}
+ggsave(here("figs", "yearly_tilapia_tot.png"), bg = "white")
+```
+
+#### Subset of yearly tilapia totals by country
+
+```{r}
+tilapia_subset <- tilapia_long %>% 
+  filter(country %in% c("Ecuador", "Honduras", "Costa Rica", "Mexico"))
+```
+
+```{r}
+ggplot(tilapia_subset, aes(x = year, y = annual_count)) +
+  geom_line(aes(color = country)) +
+  theme_minimal() +
+  labs(title = "Total Tilapia Imports over Time by Country",
+       x = "Year",
+       y = "Tilapia imports (thousands of lbs")
+```
+
+```{r}
+ggsave(here("figs", "tilapia_subset.png"), bg = "white")
+```
+
